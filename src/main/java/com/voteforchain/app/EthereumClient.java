@@ -25,20 +25,22 @@ import java.util.*;
 public class EthereumClient
 {
 
-    public List<String> voteForCandidate(List<String> candidates, String votedCandidate, String emailId) throws Exception {
+    public HashMap<String,List<String>> voteForCandidate(List<String> candidates, String votedCandidate, String emailId) throws Exception {
+        HashMap<String,List<String>> result = new HashMap<>();
+        String credentialsFilePath = System.getProperty("user.dir")+"/UTC--2019-10-08T01-27-41" +
+                ".960816000Z--f23c18a0bd1311972b26eb6667c6dd47789dfb35";
         Web3j web3j = Web3j.build(new HttpService("https://ropsten.infura" +
                 ".io/0xF23C18A0BD1311972B26eB6667c6Dd47789DFb35"));
-        Credentials credentials = WalletUtils.loadCredentials("Shagun123", "/Users/shagunbhatia/Vote-For-Chain" +
-                "/voteforchain/test-net-blockchain/keystore/UTC--2019-10-08T01-27-41.960816000Z--f23c18a0bd1311972b26eb6667c6dd47789dfb35");
+        Credentials credentials = WalletUtils.loadCredentials("Shagun123", credentialsFilePath);
         DynamicArray<Bytes32> candidatesInByte32 = getCandidatesInByte32(candidates);
-        Ballot1 ballot =
-                Ballot1.deploy(web3j,credentials,ManagedTransaction.GAS_PRICE,Contract.GAS_LIMIT,candidatesInByte32).send();
-        ballot.vote(new Utf8String(votedCandidate),new Utf8String(emailId));
+        Ballot ballot =
+                Ballot.deploy(web3j,credentials,ManagedTransaction.GAS_PRICE,Contract.GAS_LIMIT,candidatesInByte32).send();
+        ballot.vote(new Utf8String(votedCandidate),new Utf8String(emailId)).send();
         if(ballot.isValid()){
-            List<String> result = Arrays.asList(ballot.getContractAddress(),
-                    ballot.getCandidateName().send().getValue(),ballot.getEmaildId().send().getValue(),
-                    String.valueOf(ballot.getTimestamp().send().getValue()));
-            return result;
+             result.put(ballot.getContractAddress(),Arrays.asList(ballot.getCandidateName().send().getValue(),
+                     ballot.getEmaildId().send().getValue(), String.valueOf(ballot.getTimestamp().send().getValue()),
+                     ballot.getTransactionReceipt().toString()));
+             return result;
         }
         else return null;
     }
@@ -46,14 +48,13 @@ public class EthereumClient
     private DynamicArray<Bytes32> getCandidatesInByte32(List<String> candidates){
         List<Bytes32> candidateConverted  = new ArrayList<>();
         for(String candidate: candidates){
-            Bytes32 bytes32 =  new Bytes32(Numeric.hexStringToByteArray(asciiToHex(candidate)));
+            Bytes32 bytes32 =  asciiToHex(candidate);
             candidateConverted.add(bytes32);
         }
-        DynamicArray<Bytes32> candidatesInByte32 = new DynamicArray<Bytes32>(candidateConverted);
-        return candidatesInByte32;
+        return new DynamicArray<>(candidateConverted);
     }
 
-    public static String asciiToHex(String asciiValue)
+    public static Bytes32 asciiToHex(String asciiValue)
     {
         char[] chars = asciiValue.toCharArray();
         StringBuffer hex = new StringBuffer();
@@ -61,7 +62,8 @@ public class EthereumClient
         {
             hex.append(Integer.toHexString((int) chars[i]));
         }
-
-        return hex.toString() + String.join("", Collections.nCopies(32 - (hex.length()/2), "00"));
+        String res = hex.toString() + String.join("", Collections.nCopies(32 - (hex.length()/2), "00"));
+        Bytes32 bytes32 =  new Bytes32(Numeric.hexStringToByteArray(res));
+        return bytes32;
     }
 }

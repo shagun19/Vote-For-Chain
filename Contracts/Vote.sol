@@ -47,9 +47,11 @@ contract Ballot {
     }
     
 
-    function vote(string memory proposal, string memory _emailId) public {
+    /// Give your vote (including votes delegated to you)
+    /// to proposal `proposals[proposal].name`.
+    function vote(string memory  proposal, string memory  _emailId) public {
         require(msg.sender==chairperson);
-        require(checkValidCandidate(proposals,proposal),"Voted candidate should be among list of valid candidates");
+        //require(checkValidCandidate(proposals,proposal),"Voted candidate should be among list of valid candidates");
         candidate = proposal;
         timestamp1=now;
         emailId=_emailId;
@@ -58,11 +60,11 @@ contract Ballot {
         result = candidate;
         return result;
     }
-    function getEmaildId() public view returns (string memory result){
+    function getEmaildId() public view returns (string memory  result){
         result = emailId;
         return result;
     }
-    function getTimestamp() public view returns (uint  result){
+    function getTimestamp() public view returns (uint result){
         result = timestamp1;
         return result;
     }
