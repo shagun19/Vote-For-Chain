@@ -45,6 +45,23 @@ public class EthereumClient
         else return null;
     }
 
+    HashMap<String,List<String>> verifyVotedContract(String contractAddress) throws Exception {
+        HashMap<String,List<String>> result = new HashMap<>();
+        String credentialsFilePath = System.getProperty("user.dir")+"/UTC--2019-10-08T01-27-41" +
+                ".960816000Z--f23c18a0bd1311972b26eb6667c6dd47789dfb35";
+        Web3j web3j = Web3j.build(new HttpService("https://ropsten.infura" +
+                ".io/0xF23C18A0BD1311972B26eB6667c6Dd47789DFb35"));
+        Credentials credentials = WalletUtils.loadCredentials("Shagun123", credentialsFilePath);
+        Ballot ballot = Ballot.load(contractAddress,web3j,credentials,ManagedTransaction.GAS_PRICE,
+                Contract.GAS_LIMIT);
+        if(ballot.isValid()){
+            result.put(contractAddress,Arrays.asList(ballot.getCandidateName().send().getValue(),
+                    ballot.getEmaildId().send().getValue()));
+            return result;
+        }
+        else return null;
+    }
+
     private DynamicArray<Bytes32> getCandidatesInByte32(List<String> candidates){
         List<Bytes32> candidateConverted  = new ArrayList<>();
         for(String candidate: candidates){
